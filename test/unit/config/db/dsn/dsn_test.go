@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+const schema = "postgres"
+
 func TestDSN_GenerateConnectionString_WithSSLMode(t *testing.T) {
 	databaseDsn := dsn.DSN{
 		Host:     "localhost",
@@ -15,8 +17,8 @@ func TestDSN_GenerateConnectionString_WithSSLMode(t *testing.T) {
 		SSLMode:  "require",
 	}
 
-	expected := "host=localhost port=5432 user=user password=password dbname=testdb sslmode=require"
-	actual := databaseDsn.GenerateConnectionString()
+	expected := "postgres://user:password@localhost:5432/testdb?sslmode=require"
+	actual := databaseDsn.GenerateConnectionString(schema)
 
 	if actual != expected {
 		t.Errorf("expected database string '%s', but got '%s'", expected, actual)
@@ -32,8 +34,8 @@ func TestDSN_GenerateConnectionString_WithoutSSLMode(t *testing.T) {
 		Password: "password",
 	}
 
-	expected := "host=localhost port=5432 user=user password=password dbname=testdb"
-	actual := databaseDsn.GenerateConnectionString()
+	expected := "postgres://user:password@localhost:5432/testdb"
+	actual := databaseDsn.GenerateConnectionString(schema)
 
 	if actual != expected {
 		t.Errorf("expected database string '%s', but got '%s'", expected, actual)

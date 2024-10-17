@@ -22,11 +22,11 @@ func NewDsn(host, port, username, password, database, sslMode string) *DSN {
 	}
 }
 
-func (dsn *DSN) GenerateConnectionString() string {
+func (dsn *DSN) GenerateConnectionString(schema string) string {
 	if dsn.SSLMode != "" {
-		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-			dsn.Host, dsn.Port, dsn.Username, dsn.Password, dsn.Database, dsn.SSLMode)
+		return fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=%s",
+			schema, dsn.Username, dsn.Password, dsn.Host, dsn.Port, dsn.Database, dsn.SSLMode)
 	}
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-		dsn.Host, dsn.Port, dsn.Username, dsn.Password, dsn.Database)
+	return fmt.Sprintf("%s://%s:%s@%s:%s/%s",
+		schema, dsn.Username, dsn.Password, dsn.Host, dsn.Port, dsn.Database)
 }

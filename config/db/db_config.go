@@ -12,6 +12,7 @@ import (
 const (
 	DefaultPort     = "5432"
 	SslModeQueryKey = "sslmode"
+	DefaultSchema   = "postgres"
 )
 
 type DBConfig interface {
@@ -46,7 +47,7 @@ func (pc *PostgresConfig) ConnectionString() (string, diabuddyErrors.ApiErrors) 
 	if err := pc.loadFromEnv(); err != nil {
 		return "", err
 	}
-	return pc.dsn.GenerateConnectionString(), nil
+	return pc.dsn.GenerateConnectionString(DefaultSchema), nil
 }
 
 func (pc *PostgresConfig) Validate() diabuddyErrors.ApiErrors {
