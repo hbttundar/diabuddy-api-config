@@ -27,7 +27,7 @@ func (ac *AppConfig) Get(key string, defaultValue ...string) string {
 func (ac *AppConfig) BasePath() (string, diabuddyErrors.ApiErrors) {
 	basePath, err := filepath.Abs("../")
 	if err != nil {
-		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find app root directory", diabuddyErrors.WithInternalError(err))
+		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find appconfig root directory", diabuddyErrors.WithInternalError(err))
 	}
 	return ac.pathResolver.Resolve(basePath)
 }

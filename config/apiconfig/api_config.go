@@ -2,8 +2,8 @@ package apiconfig
 
 import (
 	"github.com/hbttundar/diabuddy-api-config/config"
-	appconfig "github.com/hbttundar/diabuddy-api-config/config/app"
-	dbconfig "github.com/hbttundar/diabuddy-api-config/config/db"
+	appconfig "github.com/hbttundar/diabuddy-api-config/config/appconfig"
+	dbconfig "github.com/hbttundar/diabuddy-api-config/config/dbconfig"
 	"github.com/hbttundar/diabuddy-api-config/config/envmanager"
 	diabuddyErrors "github.com/hbttundar/diabuddy-errors"
 )
@@ -18,7 +18,7 @@ func NewApiConfig(envManager *envmanager.EnvManager) (*ApiConfig, diabuddyErrors
 	if err != nil {
 		return nil, err
 	}
-	dbConfig, err := dbconfig.NewPostgresConfig(envManager)
+	dbConfig, err := dbconfig.NewDBConfig(envManager)
 	if err != nil {
 		return nil, err
 	}

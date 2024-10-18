@@ -1,7 +1,7 @@
 package appconfig_test
 
 import (
-	appconfig "github.com/hbttundar/diabuddy-api-config/config/app"
+	appconfig "github.com/hbttundar/diabuddy-api-config/config/appconfig"
 	"github.com/hbttundar/diabuddy-api-config/config/envmanager"
 	testmain "github.com/hbttundar/diabuddy-api-config/test"
 	"github.com/stretchr/testify/assert"
@@ -18,11 +18,11 @@ func TestAppConfig(t *testing.T) {
 	}{
 		{
 			name:         "Get() method with defined key from env resolver",
-			envVariables: map[string]string{"APP_NAME": "diabuddy-user-api-test"},
-			expected:     "diabuddy-user-api-test",
+			envVariables: map[string]string{"APP_NAME": "diabuddy-user-apiconfig-test"},
+			expected:     "diabuddy-user-apiconfig-test",
 			testFunction: func(appConfig *appconfig.AppConfig, t *testing.T, expected string) {
 				value := appConfig.Get("APP_NAME")
-				assert.Equal(t, expected, value, "Expected APP_NAME to be 'diabuddy-user-api-test'")
+				assert.Equal(t, expected, value, "Expected APP_NAME to be 'diabuddy-user-apiconfig-test'")
 			},
 		},
 		{
@@ -37,7 +37,7 @@ func TestAppConfig(t *testing.T) {
 		{
 			name:         "Get() method when both os env and default value exist but env is empty",
 			envVariables: map[string]string{"APP_NAME": ""},
-			expected:     "Diabuddy",
+			expected:     "default_app",
 			testFunction: func(appConfig *appconfig.AppConfig, t *testing.T, expected string) {
 				value := appConfig.Get("APP_NAME")
 				assert.Equal(t, expected, value, "Expected APP_NAME to fall back to default from Default() map")
@@ -114,7 +114,7 @@ func TestAppConfig_Validate(t *testing.T) {
 
 		// Create a new AppConfig
 		appConfig, err := appconfig.NewAppConfig(envManager)
-		assert.NoError(t, err, "Expected no error during app c initialization")
+		assert.NoError(t, err, "Expected no error during appconfig c initialization")
 
 		// Validate the configuration
 		err = appConfig.Validate()
@@ -142,7 +142,7 @@ func TestAppConfig_Validate(t *testing.T) {
 
 		// Create a new AppConfig
 		appConfig, err := appconfig.NewAppConfig(envManager)
-		assert.NoError(t, err, "Expected no error during app c initialization")
+		assert.NoError(t, err, "Expected no error during appconfig c initialization")
 		// force missing APP_NAME
 		os.Unsetenv("APP_NAME")
 		// Validate the configuration, expecting an error because APP_NAME is missing

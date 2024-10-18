@@ -119,7 +119,7 @@ func (em *EnvManager) LoadEnvironmentVariables() diabuddyErrors.ApiErrors {
 func (em *EnvManager) getEnvFilePath() (string, diabuddyErrors.ApiErrors) {
 	basePath, err := filepath.Abs("./")
 	if err != nil {
-		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find app root directory", diabuddyErrors.WithInternalError(err))
+		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find appconfig root directory", diabuddyErrors.WithInternalError(err))
 	}
 	envDir, resolveError := em.pathResolver.Resolve(basePath)
 	if resolveError != nil {
@@ -134,7 +134,6 @@ func (em *EnvManager) getEnvFilePath() (string, diabuddyErrors.ApiErrors) {
 }
 
 func (em *EnvManager) ReadEnvironmentVariables() (map[string]string, diabuddyErrors.ApiErrors) {
-
 	envFilepath, apiError := em.getEnvFilePath()
 	if apiError != nil {
 		return nil, apiError
@@ -177,7 +176,7 @@ func (em *EnvManager) Get(key string, defaultValue ...string) string {
 // Defaults provides default values for environment variables.
 func defaultValues() map[string]string {
 	return map[string]string{
-		AppNameKey:           "Diabuddy",
+		AppNameKey:           "default_app",
 		AppEnvKey:            "local",
 		AppEncryptionKey:     "",
 		AppDebugKey:          "false",
@@ -189,9 +188,9 @@ func defaultValues() map[string]string {
 		AuthSecretKey:        "my_default_secret",
 		DbHostKey:            "127.0.0.1",
 		DbPortKey:            "5432",
-		DbDatabaseKey:        "diabuddy",
-		DbUsernameKey:        "root",
-		DbPasswordKey:        "root",
+		DbDatabaseKey:        "default_db",
+		DbUsernameKey:        "default_user",
+		DbPasswordKey:        "default_pass",
 		DbSslModeKey:         "disable",
 	}
 }
