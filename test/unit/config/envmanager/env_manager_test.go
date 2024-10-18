@@ -43,21 +43,18 @@ func TestLoadEnvironmentVariables(t *testing.T) {
 		assert.NoError(t, err, "expected no error while creating env manager")
 
 		err = envManager.LoadEnvironmentVariables()
-		assert.NoError(t, err, "expected no error while loading environment variables for a non-existent environment as its by default consider .env file")
+		assert.NoError(t, err, "expected no error while loading environment variables for a non-existent environment as it's by default consider .env file")
 	})
 }
 
 func TestEnvManager_ReadEnvironmentVariables(t *testing.T) {
-	// Set up environment manager for "test" environment
 	envManager, err := envmanager.NewEnvManager(envmanager.WithEnvironment("test"))
 	assert.NoError(t, err, "expected no error while creating environment manager")
 
-	// Load environment variables from the "test" environment
 	envVars, err := envManager.ReadEnvironmentVariables()
 	assert.NoError(t, err, "expected no error while reading environment variables")
 	assert.NotNil(t, envVars, "expected non-nil map of environment variables")
 
-	// Check that some specific keys have expected values
 	expectedKeys := []string{
 		envmanager.DbHostKey,
 		envmanager.DbPortKey,
@@ -72,24 +69,20 @@ func TestEnvManager_ReadEnvironmentVariables(t *testing.T) {
 		assert.NotEmpty(t, value, "expected key %s to have a non-empty value", key)
 	}
 
-	// Validate that env variables are set correctly in the current process using ReadEnvironmentVariables
 	for key, expectedValue := range envVars {
-		// Set the environment variable for this test
 		err := os.Setenv(key, expectedValue)
 		assert.NoError(t, err, "expected no error while setting environment variable %s", key)
 
-		// Ensure it was set correctly
 		actualValue := os.Getenv(key)
 		assert.Equal(t, expectedValue, actualValue, "expected environment variable %s to match the value set by ReadEnvironmentVariables", key)
 	}
 
-	// Cleanup the environment variables
 	for key := range envVars {
 		_ = os.Unsetenv(key)
 	}
 }
 
-func TestGetWithDefaults(t *testing.T) {
+func TestEnvManager_GetWithDefaults(t *testing.T) {
 	tests := []struct {
 		name          string
 		setupEnv      map[string]string
@@ -100,7 +93,7 @@ func TestGetWithDefaults(t *testing.T) {
 			name:          "test using default value when env variable is not provided or empty",
 			setupEnv:      map[string]string{"APP_NAME": ""},
 			useDefault:    true,
-			expectedValue: "Diabuddy",
+			expectedValue: "default_app",
 		},
 		{
 			name:          "test using default value when use default is false",
@@ -112,16 +105,8 @@ func TestGetWithDefaults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Update global EnvVars from testmain with specific test setup
-			for k, v := range tt.setupEnv {
-				testmain.EnvVars[k] = v
-			}
+			setupTestEnvironment(tt.setupEnv)
 
-			// Apply environment setup
-			testmain.Setup()
-			defer testmain.TearDown()
-
-			// Create a new EnvManager and execute the test
 			manager, _ := envmanager.NewEnvManager(envmanager.WithUseDefault(tt.useDefault))
 			value := manager.Get(envmanager.AppNameKey)
 			assert.Equal(t, tt.expectedValue, value)
@@ -129,10 +114,9 @@ func TestGetWithDefaults(t *testing.T) {
 	}
 }
 
-func TestGetWithEnvironmentVariable(t *testing.T) {
+func TestEnvManager_GetWithEnvironmentVariable(t *testing.T) {
 	testmain.EnvVars["APP_ENV"] = "test-env"
 
-	// Apply environment setup
 	testmain.Setup()
 	defer testmain.TearDown()
 
@@ -144,49 +128,87 @@ func TestGetWithEnvironmentVariable(t *testing.T) {
 	assert.Equal(t, expectedValue, value, "expected environment value to match")
 }
 
-func TestCachingBehavior(t *testing.T) {
+func TestEnvManager_WithUseCache(t *testing.T) {
 	t.Run("Verify that cached value remains consistent", func(t *testing.T) {
-		// Set initial environment variables and apply them
 		testmain.EnvVars["CACHE_TEST_KEY"] = "initial-value"
 		testmain.Setup()
 		defer testmain.TearDown()
 
 		manager, _ := envmanager.NewEnvManager(envmanager.WithUseCache(true))
 
-		// First retrieval to cache the value
 		initialValue := manager.Get("CACHE_TEST_KEY")
 		assert.Equal(t, "initial-value", initialValue, "expected initial cached value to be 'initial-value'")
 
-		// Change the environment variable value and re-setup environment
 		testmain.EnvVars["CACHE_TEST_KEY"] = "updated-value"
 		testmain.Setup()
 
-		// Value should still be the cached "initial-value"
 		cachedValue := manager.Get("CACHE_TEST_KEY")
 		assert.Equal(t, "initial-value", cachedValue, "expected cached value to remain 'initial-value' even after environment variable update")
 	})
 
 	t.Run("Verify that clearing cache works correctly", func(t *testing.T) {
-		// Set initial environment variables and apply them
 		testmain.EnvVars["CACHE_TEST_KEY"] = "initial-value"
 		testmain.Setup()
 		defer testmain.TearDown()
 
 		manager, _ := envmanager.NewEnvManager(envmanager.WithUseCache(true))
 
-		// First retrieval to cache the value
 		initialValue := manager.Get("CACHE_TEST_KEY")
 		assert.Equal(t, "initial-value", initialValue, "expected initial cached value to be 'initial-value'")
 
-		// Clear the cache
 		manager.ClearCache()
 
-		// Change the environment variable value and re-setup environment
 		testmain.EnvVars["CACHE_TEST_KEY"] = "new-value"
 		testmain.Setup()
 
-		// Now that the cache is cleared, the new value should be retrieved
 		newValue := manager.Get("CACHE_TEST_KEY")
 		assert.Equal(t, "new-value", newValue, "expected new value after clearing cache")
 	})
+}
+
+func TestEnvManager_WithExtendedDefaults(t *testing.T) {
+	extendedDefaults := map[string]string{
+		"EXTENDED_KEY_1": "extended_value_1",
+		"EXTENDED_KEY_2": "extended_value_2",
+	}
+
+	// Define a DefaultExtender function that modifies the default map.
+	extender := func(defaults map[string]string) {
+		for key, value := range extendedDefaults {
+			defaults[key] = value
+		}
+	}
+
+	// Create an EnvManager using the DefaultExtender.
+	envManager, err := envmanager.NewEnvManager(envmanager.WithExtendedDefaults(extender))
+	assert.NoError(t, err, "expected no error while creating environment manager with extended defaults")
+
+	t.Run("Verify that extended defaults are available", func(t *testing.T) {
+		for key, expectedValue := range extendedDefaults {
+			value := envManager.Get(key)
+			assert.Equal(t, expectedValue, value, "expected value for key %s to match the extended default", key)
+		}
+	})
+
+	t.Run("Verify that extended defaults are overridden by actual environment variables", func(t *testing.T) {
+		testmain.EnvVars["EXTENDED_KEY_1"] = "overridden_value_1"
+
+		testmain.Setup()
+		defer testmain.TearDown()
+
+		envManager, err = envmanager.NewEnvManager(envmanager.WithExtendedDefaults(extender))
+		assert.NoError(t, err, "expected no error while creating environment manager with extended defaults and overridden variables")
+
+		value := envManager.Get("EXTENDED_KEY_1")
+		assert.Equal(t, "overridden_value_1", value, "expected overridden value for EXTENDED_KEY_1")
+	})
+}
+
+func setupTestEnvironment(setupEnv map[string]string) {
+	// Clear and set up the environment based on the provided map
+	testmain.TearDown()
+	for key, value := range setupEnv {
+		testmain.EnvVars[key] = value
+	}
+	testmain.Setup()
 }

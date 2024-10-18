@@ -15,12 +15,12 @@ func NewRootPathResolver() *RootPathResolver {
 func (pr *RootPathResolver) Resolve(path string) (string, diabuddyErrors.ApiErrors) {
 	basePath, err := filepath.Abs(path)
 	if err != nil {
-		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find app root directory", diabuddyErrors.WithInternalError(err))
+		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find appconfig root directory", diabuddyErrors.WithInternalError(err))
 	}
 
 	rootPath, err := pr.findRootDir(basePath)
 	if err != nil {
-		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find app root directory", diabuddyErrors.WithInternalError(err))
+		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find appconfig root directory", diabuddyErrors.WithInternalError(err))
 	}
 	return rootPath, nil
 }
@@ -30,16 +30,25 @@ func (pr *RootPathResolver) findRootDir(dir string) (string, diabuddyErrors.ApiE
 		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "directory path is not set")
 	}
 	dir = filepath.Clean(dir)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "directory path is not found")
+	}
 
 	// Traverse upwards until we find `go.mod` or reach the system root directory.
 	for {
 		goModPath := filepath.Join(dir, "go.mod")
 		file, err := os.Open(goModPath)
 		if err == nil {
-			defer file.Close()
-			if fi, err := file.Stat(); err == nil && !fi.IsDir() {
+			// If we successfully open the file, check if it's a regular file and then close it.
+			fi, statErr := file.Stat()
+			if statErr == nil && !fi.IsDir() {
+				closeErr := file.Close()
+				if closeErr != nil {
+					return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "error closing go.mod file")
+				}
 				return dir, nil
 			}
+			_ = file.Close() // Close the file even if stat fails
 		}
 
 		// Move to the parent directory.
@@ -51,5 +60,5 @@ func (pr *RootPathResolver) findRootDir(dir string) (string, diabuddyErrors.ApiE
 		dir = parentDir
 	}
 
-	return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find app root directory; go.mod not found")
+	return "", diabuddyErrors.NewApiError(diabuddyErrors.InternalServerErrorType, "could not find appconfig root directory; go.mod not found")
 }

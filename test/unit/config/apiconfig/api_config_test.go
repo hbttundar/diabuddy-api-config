@@ -1,7 +1,7 @@
 package apiconfig_test
 
 import (
-	apiconfig "github.com/hbttundar/diabuddy-api-config/config/api"
+	apiconfig "github.com/hbttundar/diabuddy-api-config/config/apiconfig"
 	"github.com/hbttundar/diabuddy-api-config/config/envmanager"
 	testmain "github.com/hbttundar/diabuddy-api-config/test"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,7 @@ func TestNewApiConfig(t *testing.T) {
 		{
 			name: "Custom configuration with environment variables",
 			setupEnv: map[string]string{
-				"APP_NAME":    "diabuddy-user-api",
+				"APP_NAME":    "diabuddy-user-apiconfig",
 				"APP_ENV":     "production",
 				"APP_URL":     "localhost",
 				"APP_DEBUG":   "false",
@@ -178,7 +178,7 @@ func TestDBConfig_Validate(t *testing.T) {
 			},
 			useDefaultOptions: false,
 			expectedError:     true,
-			expectedErrMsg:    "Error 500: db configuration is invalid required key(s):DB_HOST is/are missed or empty.",
+			expectedErrMsg:    "Error 500: dbconfig configuration is invalid required key(s):DB_HOST is/are missed or empty.",
 		},
 	}
 
